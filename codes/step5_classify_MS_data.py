@@ -7,7 +7,7 @@ from os.path import join
 from natsort import natsorted
 
 # Directories
-sot_save_dir = 'kmeans_optical_dense_24_color_100000'
+sot_save_dir = 'filtered_MS'
 sot_classifier_dir = 'motion_seg_classified'
 temp_dir = 'temp_dir'
 rgb_dir = 'original_test_frames'
