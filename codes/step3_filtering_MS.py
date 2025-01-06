@@ -14,7 +14,7 @@ from sklearn.cluster import KMeans
 # Parameters
 n_colors = 24
 threshold = 100000  # Contour threshold for cluster masking
-adv_ms_save_dir = 'kmeans_optical_dense_24_color_100000'
+adv_ms_save_dir = 'filtered_MS'
 data_dir = 'motion_segmentation'
 
 # Create output directory
