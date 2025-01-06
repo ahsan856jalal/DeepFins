@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 6 11:23:15 2025
+Created on Mon Jan  6 11:23:15 2025
 
 @author: ahsanjalal
 """
@@ -11,14 +11,13 @@ import os
 import glob
 import numpy as np
 from pathlib import Path
-
+import os
 def load_yolo_labels(file_path):
     """Load YOLO format labels from a text file."""
     with open(file_path, 'r') as f:
         lines = f.readlines()
     labels = [list(map(float, line.strip().split())) for line in lines]
     return np.array(labels)
-
 def calculate_iou(box1, box2):
     """Calculate IoU between two bounding boxes."""
     x1, y1, w1, h1 = box1
@@ -41,8 +40,10 @@ def calculate_iou(box1, box2):
     union_area = box1_area + box2_area - inter_area
 
     return inter_area / union_area if union_area > 0 else 0
-
-# Parameters
+# 
+# Precision: 0.8760
+# Recall: 0.8090
+# F-Score: 0.8412
 model_path = "best.pt"
 gt_dir = "original_test_frames"  # Directory containing test images
 output_dir = "yolo_predictions"  # Directory to save predictions
@@ -50,31 +51,24 @@ output_dir = "yolo_predictions"  # Directory to save predictions
 # Create output directory if it doesn't exist
 os.makedirs(output_dir, exist_ok=True)
 
+
+gt_files = {Path(f).stem for f in glob.glob(f"{gt_dir}/*.txt")}
+
+output_files = {Path(f).stem.replace('.txt', '') for f in glob.glob(f"{output_dir}/*.txt")}
+missing_files = gt_files - output_files
+
+missing_gt_files = [f"{gt_dir}/{file}.png" for file in missing_files]
+
 # Load the YOLO model
 model = YOLO(model_path)
 
-# Check for already processed files
-# processed_files = set(Path(output_dir).glob("results/labels/*.txt"))
-# processed_files=set(Path(output_dir).glob("/*.txt"))
-
 # Perform predictions and save results
-for img_file in glob.glob(f"{gt_dir}/*.png"):  # Assuming test images are in JPG format
-    file_name = Path(img_file).stem
-    pred_file_path = os.path.join(output_dir, f"{file_name}.txt")
-    if os.path.exists(pred_file_path):
-        print(f"Skipping image {file_name} (already processed)")
-        continue
-    # if pred_file_path in processed_files:
-    #     print(f"Skipping {file_name}: Output file already exists.")
-    #     continue
+results = model.predict(source=missing_gt_files, save=True, save_txt=True, project=output_dir, name="results")
 
-    # Run YOLO prediction
-    results = model.predict(source=img_file, save=True, save_txt=True, project=output_dir, name="results")
+# print(f"Predictions saved to: {os.path.join(output_dir, 'results')}")
 
-# Prediction results directory
-pred_dir = output_dir # check path if getting no results
-
-# Metrics calculation
+pred_dir = output_dir # update the pred_dir
+# Metrics
 tp, fp, fn = 0, 0, 0
 
 # Iterate through ground truth files
@@ -90,6 +84,7 @@ for gt_file in glob.glob(f"{gt_dir}/*.txt"):
     for gt in gt_labels:
         matched = False
         for pred in pred_labels:
+            # Check for matching class and IoU threshold
             if gt[0] == pred[0]:  # Same class
                 iou = calculate_iou(gt[1:], pred[1:])  # Calculate IoU for bounding boxes
                 if iou >= 0.5:  # IoU threshold
@@ -116,7 +111,7 @@ for gt_file in glob.glob(f"{gt_dir}/*.txt"):
 precision = tp / (tp + fp) if tp + fp > 0 else 0
 recall = tp / (tp + fn) if tp + fn > 0 else 0
 f_score = 2 * (precision * recall) / (precision + recall) if precision + recall > 0 else 0
-print('Standalone YOLO predictions')
+
 print(f"Precision: {precision:.4f}")
 print(f"Recall: {recall:.4f}")
 print(f"F-Score: {f_score:.4f}")
