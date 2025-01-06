@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the folder path
-folder_path="/media/ahsanjalal/NVMe/ahsan/ozfish/fish_detection_classification_tracking/codes"
+folder_path="DeepFins/codes"
 
 # Move to the folder
 cd "$folder_path" || { echo "Error: Could not change directory to $folder_path"; exit 1; }
