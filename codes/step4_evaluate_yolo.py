@@ -54,16 +54,19 @@ os.makedirs(output_dir, exist_ok=True)
 model = YOLO(model_path)
 
 # Check for already processed files
-processed_files = set(Path(output_dir).glob("results/labels/*.txt"))
+# processed_files = set(Path(output_dir).glob("results/labels/*.txt"))
+# processed_files=set(Path(output_dir).glob("/*.txt"))
 
 # Perform predictions and save results
-for img_file in glob.glob(f"{gt_dir}/*.jpg"):  # Assuming test images are in JPG format
+for img_file in glob.glob(f"{gt_dir}/*.png"):  # Assuming test images are in JPG format
     file_name = Path(img_file).stem
-    pred_file_path = os.path.join(output_dir, "results", "labels", f"{file_name}.txt")
-    
-    if pred_file_path in processed_files:
-        print(f"Skipping {file_name}: Output file already exists.")
+    pred_file_path = os.path.join(output_dir, f"{file_name}.txt")
+    if os.path.exists(pred_file_path):
+        print(f"Skipping image {file_name} (already processed)")
         continue
+    # if pred_file_path in processed_files:
+    #     print(f"Skipping {file_name}: Output file already exists.")
+    #     continue
 
     # Run YOLO prediction
     results = model.predict(source=img_file, save=True, save_txt=True, project=output_dir, name="results")
