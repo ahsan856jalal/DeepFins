@@ -13,7 +13,7 @@ temp_dir = 'temp_dir'
 rgb_dir = 'original_test_frames'
 
 # Model paths
-model_path = "best.pt"  # Replace with your YOLOv8 trained model
+model_path = "best_yolov11x.pt"  # Replace with your YOLOv8 trained model
 
 # Check for CUDA availability
 device = "cuda:0" if torch.cuda.is_available() else "cpu"

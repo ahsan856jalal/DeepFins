@@ -12,6 +12,9 @@ import glob
 import numpy as np
 from pathlib import Path
 import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+import torch
+torch.cuda.empty_cache()
 def load_yolo_labels(file_path):
     """Load YOLO format labels from a text file."""
     with open(file_path, 'r') as f:
@@ -41,16 +44,17 @@ def calculate_iou(box1, box2):
 
     return inter_area / union_area if union_area > 0 else 0
 # 
-# Precision: 0.8760
-# Recall: 0.8090
-# F-Score: 0.8412
-model_path = "best.pt"
+# Precision: 0.8280
+# Recall: 0.8336
+# F-Score: 0.8308
+model_path = "best_yolov11x.pt"
 gt_dir = "original_test_frames"  # Directory containing test images
 output_dir = "yolo_predictions"  # Directory to save predictions
 
 # Create output directory if it doesn't exist
 os.makedirs(output_dir, exist_ok=True)
-
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {device}")
 
 gt_files = {Path(f).stem for f in glob.glob(f"{gt_dir}/*.txt")}
 
@@ -58,16 +62,18 @@ output_files = {Path(f).stem.replace('.txt', '') for f in glob.glob(f"{output_di
 missing_files = gt_files - output_files
 
 missing_gt_files = [f"{gt_dir}/{file}.png" for file in missing_files]
+if len(missing_gt_files)>0.2*len(gt_files):
+    missing_gt_files=gt_dir
 
 # Load the YOLO model
 model = YOLO(model_path)
-
+model.to(device)
 # Perform predictions and save results
-results = model.predict(source=missing_gt_files, save=True, save_txt=True, project=output_dir, name="results")
+results = model.predict(gt_dir,save_txt=True, project=output_dir)
 
 # print(f"Predictions saved to: {os.path.join(output_dir, 'results')}")
 
-pred_dir = output_dir # update the pred_dir
+pred_dir = output_dir+f"/predict/labels" # update the pred_dir
 # Metrics
 tp, fp, fn = 0, 0, 0
 
